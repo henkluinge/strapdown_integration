@@ -1,0 +1,6 @@
+.env
+.env_unix
+.env_win
+*.exe
+.vscode/*
+*.pyc 
