@@ -38,28 +38,29 @@ int main(void)
     
     printf("Reading log file\n");
 
-    // Open reference csv.
+    // Reference csv.
     FILE* reference_file = fopen("C:/Users/HenkColleenNiamh/Code/strapdown_integration/tests/simple_strapdown_reference.csv", "r");
     if (reference_file == NULL) {
         perror("Error opening file");
         return EXIT_FAILURE;
     }
-    // Open the output file for writing
+    // Read Header
+    char line[256];
+    printf(fgets(line, sizeof(line), reference_file));
+    
+    // Output log
     FILE* output_file = fopen("./tests/strapdown_computed_with_c.csv", "w");
     if (output_file == NULL) {
         perror("Error opening output file");
         return EXIT_FAILURE;
     }
-    // Write the header to the output file
+    // Write header
     fprintf(output_file, "t,q_ref_w,q_ref_x,q_ref_y,q_ref_z,q_ls_w,q_ls_x,q_ls_y,q_ls_z\n");
 
-    // Read Header
-    char line[256];
-    printf(fgets(line, sizeof(line), reference_file));
-
-    // Read starting orientation
+    // Starting orientation. By convention, the first sample (t=i=0) is used to set the initial orientation.
     fgets(line, sizeof(line), reference_file);
     ParseRefCsvLine(line, &t_prev, y_gyr, y_acc, &q_ls);
+    WriteSampleToLog(output_file, q_ls, q_ls, t);
     printf("Starting orientation\n");
     Quaternion_fprint(stdout, &q_ls);
     printf("\n");
@@ -67,7 +68,7 @@ int main(void)
     while (fgets(line, sizeof(line), reference_file)) {
             
         ParseRefCsvLine(line, &t, y_gyr, y_acc, &q_ref);
-        sampleTime = t - t_prev;
+        sampleTime = t - t_prev; // Sample time could theoretically change per samlpe. E.g. wireless IMU.
         t_prev = t;
 
         StrapdownIntegrationOnestep(y_gyr, sampleTime, &q_ls);
