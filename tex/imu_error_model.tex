@@ -1,0 +1,95 @@
+\documentclass{article}
+
+\usepackage{amsmath, amsfonts}
+%\usepackage{tensor}
+\usepackage[colorlinks]{hyperref}
+
+\usepackage[format=plain,
+            labelfont={bf,it},
+            textfont=it]{caption}
+
+\usepackage{graphicx, subcaption}
+\graphicspath{ {./images/} }
+
+\usepackage{biblatex} %Imports biblatex package
+\addbibresource{./strapdown_report.bib} %Import the bibliography file
+
+%\usepackage{biblatex} %Imports biblatex package
+%\usepackage[backend=bibtex,style=alphabetic]{biblatex}
+%\usepackage[toc]{appendix}  % Show appendices in table of contents.
+
+%\addbibresource{my_library.bib} %Import the bibliography file
+
+\title{Inertial sensor unit error model}
+\author{Henk Luinge  \\
+	infertia.com   \\
+	}
+	
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+We describe how the uncertainty of the IMU orientation and velocity estimation propagates over time, given a baseline random walk model.
+\end{abstract}
+
+\section{Introduction}
+
+We assume an orientation with some uncertainty, that used to compute a next orientation using an angular velocity/delta angle which has an uncertain baseline. The orientation propagation consists of a deterministic and a stochastic part and can be used as part of a larger maximum likelihood mechanization such as a Kalman filter. We assume consumer-grade inertial sensors as decribed in the strapdown navigation report \cite{Luinge2025}.
+
+\section{Background and definitions}
+
+\paragraph{Lemma: small angles rotation}
+We use the helical angle approximation as described in  \cite{Bortz1970} to approximate a rotation from A to B over a small angle $\Delta \varphi$.
+
+\begin{equation} \label{eq:small_angles_orientation_update}
+{}^{SB} \varphi = {}^{SA} \varphi + \Delta \varphi + {}^{SA} \varphi \times \Delta \varphi
+\end{equation}
+This equation is only valid for small angles $\varphi $ as well as $\Delta \varphi$.
+
+The coordinate systems are the same as defined in \cite{Luinge2025}: L stands for the local, earth-fixed coordinate frame and S for the imu frame.
+
+
+
+
+\paragraph{Error definitions}
+The orientation error is described using the axis-angle representation $\theta$ and the baseline $b_t$, both 3 element vectors.
+
+\begin{equation} \label{eq:orientation_error_definition}
+{}^{LS} \hat{R} = {}^{LS} R \cdot R_{\epsilon} \approx {}^{LS} R \cdot \left[ I + \theta\times  \right]
+\end{equation}
+
+The capital $I$ is the 3x3 identity matrix. $\theta$ is the axis and angle to rotate from the real to the estimated orientation, starting from the actual (but unknown) S frame. In typical Kalman filtering applications, the unknown $\theta$ its described using as a zero-mean gaussian probability density function (pdf).
+
+\begin{equation} \label{eq:angular_velocity_model}
+y_{gyr,t} =  \hat{\omega}_t = \omega_t + b_t
+\end{equation}
+
+\section{Error propagation}
+Using \ref{eq:small_angles_orientation_update} and starting from an error axis-angle $\varphi$:
+\begin{equation} \label{eq:phi_propagation}
+\varphi_t =  \varphi_{t-1} + T\omega + \varphi_{t-1} \times T\omega 
+\end{equation}
+
+\section{Strapdown integration}
+Assuming constant angular velocity during a sampling interval, the change in orientation between two timesteps is computed as:
+
+\begin{equation} \label{eq:strapdown_orientation_including_bias}
+\Delta \hat{R}_t \equiv {}^{S_{t-1}S_t} \hat{R} \approx \left[ I + \omega \times   +  \hat{b}\times  \right]
+\end{equation}
+
+or including the previous orientation:
+\begin{equation} \label{eq:strapdown_orientation_propagation_rotation_matrix}
+\begin{aligned}
+{}^{LS} \hat{R}_t &= {}^{LS} \hat{R}_{t-1} \cdot  \Delta \hat{R}_t  \\
+&= {}^{LS} R_{t-1} \cdot \left[ I + \theta\times  \right] \cdot \left[ I + \omega \times   +  \hat{b}\times  \right] \\
+&=
+\end{aligned}
+\end{equation}
+
+
+\printbibliography
+
+\end{document}

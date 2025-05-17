@@ -9,7 +9,7 @@ def save_to_reference_log_simple_strapdown(y_imu, q_sdi_ls, t):
     df_q = pd.DataFrame(q_sdi_ls, index=t, columns=[f'q_{i}' for i in range(4)]) 
     df_strapdown = pd.concat(df_imu + [df_q,], axis=1) #.to_csv('./tests/imu_signals.csv', index=True, float_format='%.16f')
     df_strapdown.index.name = 'time'
-    df_strapdown.to_csv('./tests/simple_strapdown_reference.csv', index=True, float_format='%.16f')
+    df_strapdown.to_csv('../tests/simple_strapdown_reference.csv', index=True, float_format='%.16f')
     return None
 
 
