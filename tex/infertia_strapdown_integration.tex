@@ -12,7 +12,7 @@
 \graphicspath{ {./images/} }
 
 \usepackage{biblatex} %Imports biblatex package
-\addbibresource{./strapdown_report.bib} %Import the bibliography file
+\addbibresource{./strapdown_report} %Import the bibliography file
 
 %\usepackage{biblatex} %Imports biblatex package
 %\usepackage[backend=bibtex,style=alphabetic]{biblatex}
@@ -142,22 +142,41 @@ with $g_c$ the local gravitational constant, e.g. $9.81 m/s^2$ in the Netherland
 
 \section{Sectioning the integral}
 
+Define the following \textbf{time instants}:
+\begin{itemize}
+\item High-frequency sampling times $t_i$ with  $i \in 0..n_t$. This would typically be the rate of the ADC converter, at a rate of hundreds to perhaps thousands of Hz. L would represent the current time that the pose needs to be calculated.
+\item the time instants of the output data rate. These are given by $D_j$ with  $j \in 0..n_j$. j starts at zero and grows with the duration of the measurement. M would be the pose at current time: $t_{nt}=D_{nj}$
+\item High frequency sampling times within the interval $s_k$ with  $k \in 0..n_k$. The index $k$ resets with every new ODR interval.
+\end{itemize}
+
+Define the following \textbf{intervals}:
+\begin{itemize}
+\item The change in velocity or change in orientation over a short interval from $s_{k-1}$ to $s_k$ is given by $\delta_k$.
+\item The change in velocity or change in orientation over an ODR interval from $D_{j-1}$ to $D_j$ is given by $\Delta_j$.
+\end{itemize}
+
+We assume that when an signal such as accelerometer signal $y_{acc}$ is measured at some time $t_i$, it was constant between $t_{i-1}$ and $t_i$.
+
+A graphical summary of the above is vien in figure \ref{fig:strapdown_integration_timelines}.
+
 \begin{figure}[ht]
 \includegraphics[scale=.8]{strapdown_integration_timelines.png} 
-\caption{Definition of timelines. The data collection starts at $t_0$ and continues, in this figure to $t_6$. We seek to capture integrated quantities from each ODR interval ($D_0$, $D_1$,...). The samples within the ODR interval are written as $s_i$.}
+\caption{Definition of timelines and intervals.  We seek to capture integrated quantities from each ODR interval ($D_0$, $D_1$,...). The samples within the ODR interval are written as $s_i$.}
 \centering
+\label{fig:strapdown_integration_timelines}
 \end{figure}
 
+Following from \ref{eq:angular_velocity_integration}, the orientation at some time $t=t_L$ is chopped up in two multiplication sequences:
 \begin{equation} \label{eq:orientation_chopped_up}
-^{LS_t}\textbf{q}_{} = \prod_{j=0}^{n_{int}}\boldsymbol{\Delta q}_j
-= \prod_{j=0}^{n_{int}} \prod_{i=0}^{ns} \boldsymbol{\delta q}_i
+^{LS_t}\textbf{q}_{} = \prod_{j=0}^{n_j}\boldsymbol{\Delta q}_j
+= \prod_{j=0}^{n_j} \prod_{k=0}^{n_k} \boldsymbol{\delta q}_k
 \end{equation}
 
-and the change in velocity at the end of ODR interval j:
+Similarly following \ref{eq:angular_velocity_integration}, the change in velocity at the end of ODR interval j:
 \begin{equation} \label{eq:acceleration_chopped_up}
 \begin{aligned}
-^L\textbf{v}_{j} &= ^L\textbf{v}_0 + T \sum_{i=1}^{j} \sum_{i=1}^{n_s} {}^{LS}\boldsymbol{R} \cdot \boldsymbol{y}_{acc,i} +n_{int} \cdot n_s \cdot T \cdot ^L\boldsymbol{g} \\ 
-&=  ^L\textbf{v}_0 + T \sum_{i=0}^{} \Delta v_t + n_{int} \cdot n_s \cdot T \cdot ^L\boldsymbol{g}
+^L\textbf{v}_{j} &= ^L\textbf{v}_0 + T \sum_{j=1}^{n_j} \sum_{k=1}^{n_k} {}^{LS}\boldsymbol{R} \cdot \boldsymbol{y}_{acc,i} +n_{j} \cdot n_s \cdot T \cdot ^L\boldsymbol{g} \\ 
+&=  ^L\textbf{v}_0 + T \sum_{j=1}^{n_j} \Delta v_t + n_{j} \cdot n_s \cdot T \cdot ^L\boldsymbol{g}
 \end{aligned}
 \end{equation}
 
