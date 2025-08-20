@@ -11,14 +11,9 @@
 \usepackage{graphicx, subcaption}
 \graphicspath{ {./images/} }
 
-\usepackage{biblatex} %Imports biblatex package
-\addbibresource{./strapdown_report} %Import the bibliography file
-
-%\usepackage{biblatex} %Imports biblatex package
-%\usepackage[backend=bibtex,style=alphabetic]{biblatex}
-%\usepackage[toc]{appendix}  % Show appendices in table of contents.
-
-%\addbibresource{my_library.bib} %Import the bibliography file
+% In terminal, run: biber strapdown_report
+\usepackage[backend=biber]{biblatex}
+\addbibresource{./strapdown_report.bib} %Import the bibliography file
 
 \title{Strapdown integration for MEMS inertial sensors}
 \author{Henk Luinge  \\
@@ -38,7 +33,7 @@ Applications using MEMS inertial sensors tend to use the movement signals at a m
 \section{Introduction}
 
 
-We consider applications in which a 3D inertial measurement unit (IMU) is used to track its change in movement. Were not only interested in the momentary sensor signals (angular velocity and accelerometer signals), but also in the integrated quantities: change in orientation, change in velocity and change in position. Typically these quantities are computed on a micro controller using a finite difference integration process also known as strap down integration, see e.g. Woodman \cite{Woodman2007AnIT}.
+We consider applications in which a 3D inertial measurement unit (IMU) is used to track its change in movement. Were not only interested in the momentary sensor signals (angular velocity and accelerometer signals), but also in the integrated quantities: change in orientation, change in velocity and change in position. Typically these quantities are computed on a micro controller using a finite difference integration process also known as strap down integration, see e.g. Woodman \cite{Woodman2007}.
 
 Small errors in sensor data as well as sampling artefacts will cause integration errors, leading to an increasing uncertainty in computed quantities. One specific error cause is loss of integrated values due to a too low strap down computation rate. In 3D movement, the change in orientation and velocity does not follow a simple linear integration, but a differential equation \cite{Bortz1970}. This means that a simple low-pass averaging filter is not sufficient to reconstruct the movement. 
 
@@ -168,8 +163,8 @@ A graphical summary of the above is vien in figure \ref{fig:strapdown_integratio
 
 Following from \ref{eq:angular_velocity_integration}, the orientation at some time $t=t_L$ is chopped up in two multiplication sequences:
 \begin{equation} \label{eq:orientation_chopped_up}
-^{LS_t}\textbf{q}_{} = \prod_{j=0}^{n_j}\boldsymbol{\Delta q}_j
-= \prod_{j=0}^{n_j} \prod_{k=0}^{n_k} \boldsymbol{\delta q}_k
+^{LS_t}\textbf{q}_{} = \prod_{j=1}^{n_j}\boldsymbol{\Delta q}_j
+= \prod_{j=1}^{n_j} \prod_{k=1}^{n_k} \boldsymbol{\delta q}_k
 \end{equation}
 
 Similarly following \ref{eq:angular_velocity_integration}, the change in velocity at the end of ODR interval j:

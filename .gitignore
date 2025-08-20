@@ -29,5 +29,7 @@ tex/infertia_strapdown_integration.synctex.gz
 tex/strapdown_report.bib.bbl
 tex/strapdown_report.bib.blg
 tests/simple_strapdown_reference.csv
-tests/simple_strapdown_reference.csv
 tex/imu_error_model-blx.bib
+tex/infertia_strapdown_integration.blg
+tex/infertia_strapdown_integration.bbl
+tex/infertia_strapdown_integration-blx.bib
