@@ -6,7 +6,6 @@
 #include <string.h>
 #include "Quaternion.h"
 
-
 void PrintVector(double* vector)
 {
     printf("[%.3f, %.3f, %.3f]",

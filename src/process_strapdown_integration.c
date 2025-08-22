@@ -12,6 +12,8 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+// gcc -I ./include ./src/process_strapdown_integration.c ./src/Quaternion.c ./src/strapdown_integration.c -lm -o strapdown && ./strapdown
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "Quaternion.h"
@@ -29,8 +31,36 @@ void WriteSampleToLog(FILE* output_file, Quaternion q_ref, Quaternion q_ls, floa
         fprintf(output_file,"\n");
     }
 
-int main(void)
+int main(int argc, char *argv[])
 {
+
+    // Check if the correct number of arguments is provided
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s <path_to_csv_file>\n", argv[0]);
+        return 1;
+    }
+    
+    // argv[1] contains the CSV file path
+    char *csv_file_path = argv[1];
+    
+    printf("CSV file path: %s\n", csv_file_path);
+
+    // Output file path
+    char output_file_path[512];
+    char *dot = strrchr(csv_file_path, '.');
+    if (dot) {
+        size_t prefix_len = dot - csv_file_path;
+        strncpy(output_file_path, csv_file_path, prefix_len);
+        output_file_path[prefix_len] = '\0';
+        strcat(output_file_path, "_with_c");
+        strcat(output_file_path, dot);
+        printf("Output file path: %s\n", output_file_path);
+        
+    } else {
+        snprintf(output_file_path, sizeof(output_file_path), "%s_with_c.csv", csv_file_path);
+    }
+
+
     Quaternion q_ls, delta_q, q_ref;
     Quaternion_setIdentity(&q_ls);   // The identity quaternion represents no rotation
     double y_gyr[3], y_acc[3]; 
@@ -39,17 +69,17 @@ int main(void)
     printf("Reading log file\n");
 
     // Reference csv.
-    FILE* reference_file = fopen("C:/Users/HenkColleenNiamh/Code/strapdown_integration/tests/simple_strapdown_reference.csv", "r");
+    FILE* reference_file = fopen(csv_file_path, "r");
     if (reference_file == NULL) {
         perror("Error opening file");
         return EXIT_FAILURE;
     }
     // Read Header
     char line[256];
-    printf(fgets(line, sizeof(line), reference_file));
+    printf("%s", fgets(line, sizeof(line), reference_file));
     
     // Output log
-    FILE* output_file = fopen("./tests/strapdown_computed_with_c.csv", "w");
+    FILE* output_file = fopen(output_file_path, "w");
     if (output_file == NULL) {
         perror("Error opening output file");
         return EXIT_FAILURE;
@@ -88,4 +118,5 @@ int main(void)
     fclose(output_file);
     
     printf("Finished reading log file\n");
+    printf("Use compare_c_implementation_with_reference.ipynb to make a graphical comparison.\n");
 }
