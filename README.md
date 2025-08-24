@@ -11,11 +11,12 @@ From math to imu:
 Python: `numpy`, `pandas`
 
 ### Compile and run
-Running a test-dataset is easiest with make:
+Generating a test-dataset with c-code is easiest with make:
 
 ``` 
 mkdir build
 cd build
 cmake ..
 make
-./strapdown ../tests/simple_strapdown_reference.csv ```
+./strapdown ../tests/simple_strapdown_reference.csv
+```

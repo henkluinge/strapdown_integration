@@ -9,6 +9,7 @@ set(SOURCES
     src/process_strapdown_integration.c
     src/Quaternion.c
     src/strapdown_integration.c
+    src/helper.c
 )
 
 # Create executable

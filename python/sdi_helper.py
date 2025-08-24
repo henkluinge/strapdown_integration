@@ -24,3 +24,13 @@ def get_odr_indices(t, t_odr):
 def sample_to_odr(q_ref_ls, t, t_odr):
     q_ref_ls_odr = np.asarray([q_ref_ls[i] for i in get_odr_indices(t, t_odr)])
     return q_ref_ls_odr
+
+
+def extract_values_from_movement(movement):
+    omega = movement['angvel']
+    q_ref_ls = movement['q_ls']
+    v_ref_l = movement['vel']
+    t = movement['time']
+    T = movement['time'][1] - movement['time'][0]
+    nt = omega.shape[0]
+    return omega, q_ref_ls, v_ref_l, t, T, nt
