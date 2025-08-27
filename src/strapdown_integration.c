@@ -16,30 +16,34 @@ void PrintVector(double* vector)
 
 // Integrate the angular velocity to the next orientation, assuming the 
 // angular velocity is constant over the sample time.
-void StrapdownIntegrationOnestep(double* y_gyr, double* y_acc,  double sampleTime, quat* q_ls_pointer, double* v_l)
+void StrapdownIntegrationOnestep(double* y_gyr, double* y_acc,  double sampleTime, quat* q_ls_pointer, double* v_sdi)
 {
-    printf(" Before SDI -> ");
-    printf(" <- \n ");
+
+    printf("\n q_ls");
+    quat_fprint(stdout, q_ls_pointer);
+    printf("\n v_sdi ");
+    PrintVector(v_sdi);
+    printf("\n ");
 
     quat delta_q;
-    // Sloppy but fast orientation change.
-    // quat_create(1, 0.5*sampleTime*y_gyr[0], 0.5*sampleTime*y_gyr[1], 0.5*sampleTime*y_gyr[2], &delta_q);
     quat_from_rotation(y_gyr, &delta_q);    
     // quat_normalize(&delta_q, &delta_q); // Ensure unit quaternion
-    quat_multiply(q_ls_pointer, &delta_q, q_ls_pointer); // Update orientation
+
+    // Update orientation
+    quat_multiply(q_ls_pointer, &delta_q, q_ls_pointer); 
 
     // # Accelerometer integration
     double y_acc_l[3];
-    // double Tg_l[3] = {0.0, 0.0, -9.81 * sampleTime};
 
     quat_rotate_vector_copy(q_ls_pointer, y_acc, y_acc_l); 
     scalar_multiply_array_in_place(y_acc_l, sampleTime); 
-    add_to_array(v_l, y_acc_l);
-    // add_to_array(v_l, Tg_l);
+    add_to_array(v_sdi, y_acc_l);
 
     printf(" After SDI -> ");
-    PrintVector(v_l);
-    printf(" <- \n ");
+    printf("\n q_ls ");
+    quat_fprint(stdout, q_ls_pointer);
+    printf("\n v_sdi ");
+    PrintVector(v_sdi);
 }
 
 /* Extract data from one line of the reference log.

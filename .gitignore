@@ -4,7 +4,10 @@
 *.exe
 .vscode/*
 *.pyc 
-build/*
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
 tex/imu_error_model.aux
 tex/imu_error_model.aux.bbl
 tex/imu_error_model.aux.blg

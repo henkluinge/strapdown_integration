@@ -39,9 +39,10 @@ int main(int argc, char *argv[])
 
     quat q_ls, delta_q, q_ref;
     quat_identity(&q_ls); // Initial orientation
+    quat_identity(&q_ref); // Initial orientation
     double y_gyr[3], y_acc[3];
-    double v_ref[3]; 
-    double v_sdi[3] = {0.0, 0.0, 0.0}; // Initial velocity
+    double v_ref[3] = {0.0, 0.0, 0.0}; // Should really be read from reference csv
+    double v_sdi[3] = {0.0, 0.0, 0.0}; // Initial velocity zero by default.
     double t = 0.0,  t_prev = 0.0, sampleTime = 1; // Time variable
     
     printf("Reading log file\n");
@@ -52,39 +53,49 @@ int main(int argc, char *argv[])
         perror("Error opening file");
         return EXIT_FAILURE;
     }
+    // Read Header from reference csv.
+    char line[512];
+    printf("Header %s", fgets(line, sizeof(line), reference_file));
    
     // Output log
     FILE* output_file = OpenOutputFile(csv_file_path);
     // Write header
     fprintf(output_file, "t,q_ref_w,q_ref_x,q_ref_y,q_ref_z, v_ref_x, v_ref_y,v_ref_z, q_ls_w,q_ls_x,q_ls_y,q_ls_z, v_sdi_x, v_sdi_x, v_sdi_x\n");
 
-    // Read Header
-    char line[512];
-    printf("Header %s", fgets(line, sizeof(line), reference_file));
-
     // Starting orientation. 
     // By convention, the first sample (t=i=0) is used to set the initial orientation.
     fgets(line, sizeof(line), reference_file);
-    WriteSampleToLog(output_file, t, q_ls, v_ref, q_ls, v_sdi);
+    WriteSampleToLog(output_file, t, q_ref, v_ref, q_ls, v_sdi);
+
+    printf("Initial conditions: ");
+    printf("\n v_ref ");
+    PrintVector(v_ref);
+    printf("\n v_sdi");
+    PrintVector(v_sdi);
+    printf("\n q_ref");
+    quat_fprint(stdout, &q_ref);
+    printf("\n q_ls");
+    quat_fprint(stdout, &q_ls);
+    printf("\n ");
+    printf("----   Starting the loop ----\n ");
 
     while (fgets(line, sizeof(line), reference_file)) {
 
         ParseRefCsvLine(line, &t, y_gyr, y_acc, &q_ref, v_ref);
-        sampleTime = t - t_prev; // Sample time could theoretically change per samlpe. E.g. wireless IMU.
+        sampleTime = t - t_prev; // Sample time could theoretically change per sample. E.g. wireless IMU.
         t_prev = t;
 
-        StrapdownIntegrationOnestep(y_gyr, y_acc, sampleTime, &q_ls, v_sdi);
-
-        // // Print current state to console
+        // Print some intermediate values.
+        printf(" \n Before SDI -> ");
+        printf("\n t: %.4f ", t);
+        printf("\n q_ref");
+        quat_fprint(stdout, &q_ref);        
+        printf("\n v_ref ");
         PrintVector(v_ref);
+        printf("\n v_sdi ");
+        PrintVector(v_sdi);
 
-        // printf("%.4f  ", sampleTime);
-        // printf("%.4f  ", t);
-        // PrintVector(y_gyr);
-
-        // quat_fprint(stdout, &q_ref);
-        // quat_fprint(stdout, &q_ls);
-        // printf("\n");
+        StrapdownIntegrationOnestep(y_gyr, y_acc, sampleTime, &q_ls, v_sdi);
 
         WriteSampleToLog(output_file, t, q_ref, v_ref, q_ls, v_sdi);
 
@@ -92,6 +103,6 @@ int main(int argc, char *argv[])
     fclose(reference_file);
     fclose(output_file);
     
-    printf("Finished reading log file\n");
-    printf("Use compare_c_implementation_with_reference.ipynb to make a graphical comparison.\n");
+    printf("\nFinished reading log file");
+    printf("\nUse compare_c_implementation_with_reference.ipynb to make a graphical comparison.\n");
 }
