@@ -7,7 +7,7 @@ set(CMAKE_C_STANDARD_REQUIRED True)
 # Define source files
 set(SOURCES
     src/process_strapdown_integration.c
-    src/Quaternion.c
+    src/vectors.c
     src/strapdown_integration.c
     src/helper.c
 )

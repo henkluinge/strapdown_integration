@@ -12,36 +12,17 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-// gcc -I ./include ./src/process_strapdown_integration.c ./src/Quaternion.c ./src/strapdown_integration.c -lm -o strapdown && ./strapdown
+// clear && gcc -I ./include ./src/process_strapdown_integration.c ./src/vectors.c ./src/strapdown_integration.c ./src/helper.c -lm -o strapdown && ./strapdown
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "Quaternion.h"
+#include "vectors.h"
 #include "strapdown_integration.h"
 #include "helper.h"
 
 #ifndef M_PI
     #define M_PI (3.14159265358979323846)
 #endif
-
-
-void GenerateOutputFilePath(const char* csv_file_path, char* output_file_path, size_t bufsize) {
-    const char *dot = strrchr(csv_file_path, '.');
-    if (dot) {
-        size_t prefix_len = dot - csv_file_path;
-        if (prefix_len < bufsize) {
-            strncpy(output_file_path, csv_file_path, prefix_len);
-            output_file_path[prefix_len] = '\0';
-            strncat(output_file_path, "_with_c", bufsize - strlen(output_file_path) - 1);
-            strncat(output_file_path, dot, bufsize - strlen(output_file_path) - 1);
-        } else {
-            // Fallback if buffer too small
-            snprintf(output_file_path, bufsize, "%s_with_c.csv", csv_file_path);
-        }
-    } else {
-        snprintf(output_file_path, bufsize, "%s_with_c.csv", csv_file_path);
-    }
-}
 
 int main(int argc, char *argv[])
 {
@@ -56,14 +37,12 @@ int main(int argc, char *argv[])
     char *csv_file_path = argv[1];
     printf("CSV file path: %s\n", csv_file_path);
 
-    char output_file_path[512];
-    GenerateOutputFilePath(csv_file_path, output_file_path, sizeof(output_file_path));
-    printf("Output file path: %s\n", output_file_path);
-
-    Quaternion q_ls, delta_q, q_ref;
-    Quaternion_setIdentity(&q_ls);   // The identity quaternion represents no rotation
-    double y_gyr[3], y_acc[3]; 
-    float t = 0.0,  t_prev = 0.0, sampleTime = 1; // Time variable
+    quat q_ls, delta_q, q_ref;
+    quat_identity(&q_ls); // Initial orientation
+    double y_gyr[3], y_acc[3];
+    double v_ref[3]; 
+    double v_sdi[3] = {0.0, 0.0, 0.0}; // Initial velocity
+    double t = 0.0,  t_prev = 0.0, sampleTime = 1; // Time variable
     
     printf("Reading log file\n");
 
@@ -73,45 +52,42 @@ int main(int argc, char *argv[])
         perror("Error opening file");
         return EXIT_FAILURE;
     }
-    // Read Header
-    char line[256];
-    printf("%s", fgets(line, sizeof(line), reference_file));
-    
+   
     // Output log
-    FILE* output_file = fopen(output_file_path, "w");
-    if (output_file == NULL) {
-        perror("Error opening output file");
-        return EXIT_FAILURE;
-    }
+    FILE* output_file = OpenOutputFile(csv_file_path);
     // Write header
-    fprintf(output_file, "t,q_ref_w,q_ref_x,q_ref_y,q_ref_z,q_ls_w,q_ls_x,q_ls_y,q_ls_z\n");
+    fprintf(output_file, "t,q_ref_w,q_ref_x,q_ref_y,q_ref_z, v_ref_x, v_ref_y,v_ref_z, q_ls_w,q_ls_x,q_ls_y,q_ls_z, v_sdi_x, v_sdi_x, v_sdi_x\n");
 
-    // Starting orientation. By convention, the first sample (t=i=0) is used to set the initial orientation.
+    // Read Header
+    char line[512];
+    printf("Header %s", fgets(line, sizeof(line), reference_file));
+
+    // Starting orientation. 
+    // By convention, the first sample (t=i=0) is used to set the initial orientation.
     fgets(line, sizeof(line), reference_file);
-    ParseRefCsvLine(line, &t_prev, y_gyr, y_acc, &q_ls);
-    WriteSampleToLog(output_file, q_ls, q_ls, t);
-    printf("Starting orientation\n");
-    Quaternion_fprint(stdout, &q_ls);
-    printf("\n");
+    WriteSampleToLog(output_file, t, q_ls, v_ref, q_ls, v_sdi);
 
     while (fgets(line, sizeof(line), reference_file)) {
-            
-        ParseRefCsvLine(line, &t, y_gyr, y_acc, &q_ref);
+
+        ParseRefCsvLine(line, &t, y_gyr, y_acc, &q_ref, v_ref);
         sampleTime = t - t_prev; // Sample time could theoretically change per samlpe. E.g. wireless IMU.
         t_prev = t;
 
-        StrapdownIntegrationOnestep(y_gyr, sampleTime, &q_ls);
+        StrapdownIntegrationOnestep(y_gyr, y_acc, sampleTime, &q_ls, v_sdi);
 
-        // Print the current state
-        printf("%.4f  ", sampleTime);
-        printf("%.4f  ", t);
-        PrintVector(y_gyr);
+        // // Print current state to console
+        PrintVector(v_ref);
 
-        Quaternion_fprint(stdout, &q_ref);
-        Quaternion_fprint(stdout, &q_ls);
-        printf("\n");
+        // printf("%.4f  ", sampleTime);
+        // printf("%.4f  ", t);
+        // PrintVector(y_gyr);
 
-        WriteSampleToLog(output_file, q_ref, q_ls, t);
+        // quat_fprint(stdout, &q_ref);
+        // quat_fprint(stdout, &q_ls);
+        // printf("\n");
+
+        WriteSampleToLog(output_file, t, q_ref, v_ref, q_ls, v_sdi);
+
     }
     fclose(reference_file);
     fclose(output_file);

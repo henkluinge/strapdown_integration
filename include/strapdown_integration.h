@@ -1,10 +1,9 @@
 #pragma once
 #include <stdlib.h>
 #include <string.h>
-#include "Quaternion.h"
 
 void PrintVector(double* vector);
 
-void StrapdownIntegrationOnestep(double* y_gyr, double sampleTime, Quaternion* orientation);
+void StrapdownIntegrationOnestep(double* y_gyr,double* y_acc, double sampleTime, quat* orientation, double* velocity);
 
-void ParseRefCsvLine(char* line, float* time,  double* y_gyr, double* y_acc, Quaternion* q_ref);
+void ParseRefCsvLine(char* line, double* time,  double* y_gyr, double* y_acc, quat* q_ref, double* v_ref);

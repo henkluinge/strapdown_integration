@@ -1,5 +1,5 @@
 #!/bin/bash
-
+clear
 mkdir build
 cd build
 cmake ..
